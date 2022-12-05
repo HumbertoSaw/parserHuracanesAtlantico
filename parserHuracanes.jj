@@ -1,0 +1,265 @@
+PARSER_BEGIN(parserHuracanes)
+class parserHuracanes{
+	public static void main (String[] args) throws ParseException{
+		System.out.println("ocean,numCycl,year,name,numTrcks,yearTrck,monthTrck,dayTrck,hourTrck,minutsTrck,recordId,statusSys,latitude,longitude,maxSustWin,minPress,34ktNE,34ktSE,34ktSW,34ktNW,50ktNE,50ktSE,50ktSW,50ktNW,64ktNE,64ktSE,64ktSW,64ktNW,radMaxWind");
+		try {
+			parserHuracanes analizador = new parserHuracanes(System.in);
+			analizador.parser();
+		}
+		catch(ParseException exception) {
+			System.out.println("ha ocurrido un error");
+			System.out.println(exception.getMessage());
+		}
+	}
+}
+PARSER_END(parserHuracanes)
+
+TOKEN : {
+	<IdHuracan: "AL" <NUMERO> <COMA> > {}
+	| <NombreHuracan: (<ESPACIO>)* <LETRAS> <COMA> (<ESPACIO>)* <NUMEROFILAS>  <COMA> (<ESPACIO>)* > {}
+	| <VelocidadHuracan: (<ESPACIO> | <RECID>) <COMA> <ESPACIO> <ESTADOHURACAN> <COMA> > {}
+	| <Fecha: <ANIO> <MES> <DIA> <COMA> <ESPACIO> <HORA> <COMA> <ESPACIO> > {}
+	| <Latitud:<ESPACIO> <NUMERO> <PUNTO> <NUMERO> ("N" | "S") <COMA> > {}
+	| <Longitud:<ESPACIO> <NUMERO> <PUNTO> <NUMERO> ("E" | "W") <COMA> > {}
+	| <Data: (<ESPACIO> <SIGNOMENOS>)* (["0"-"9"] | ",")* >{}
+}
+
+TOKEN : {
+	<DIA: ["0"-"3"] ["0"-"9"]> 
+	| <MES:["0"-"1"] ["0"-"9"]>
+	| <ANIO: (["0"-"9"]){4} > 
+	| <HORA: (["0"-"9"])* >
+
+}
+TOKEN :
+{
+	<SIGNOMENOS: ("-")* >
+	| <COMA: "," >
+	| <LETRAS:  (["A" - "Z", "a" - "z","-"]){3,} > 
+	| <PUNTO: ".">
+	| <NUMERO: (["0"-"9"])*>
+	| <NUMEROFILAS: (["0"-"9"]){1,3}>
+	| <ESPACIO: (" ")*>
+}
+TOKEN : {
+	<RECID: "C"|"G"|"I"|"L"|"P"|"R"|"S"|"T"|"W">{}
+	| <ESTADOHURACAN:"TD"|"TS"|"HU"|"EX"|"SD"|"SS"|"LO"|"WV"|"DB" >{}
+}
+
+String identicador():{
+	Token id, nombreHuracan;
+	String aux, oceano, numCycl, anio, nombre, numEntradas;
+	String retorno="";
+	String[] divisor;
+}
+{
+	id = <IdHuracan>{
+		aux = id.image.toString();
+		aux = aux.replace(" ","");
+		oceano = aux.substring(0,2);
+		numCycl = aux.substring(2,4);
+		anio = aux.substring(4);
+		retorno += oceano + "," + numCycl + "," + anio;
+	}
+	nombreHuracan = <NombreHuracan>{
+		aux = nombreHuracan.image.toString();
+		aux = aux.replace(" ","");
+		divisor = aux.split(",",2);
+		nombre = divisor[0];
+		numEntradas = divisor[1];
+		retorno += nombre + "," + numEntradas;
+
+		return retorno;
+	}
+}
+
+String data():{
+	Token fecha, lat, lon, velocidad;
+    Token max, min,ktNE34,ktSE34,ktSW34,ktNW34,ktNE50,ktSE50,ktSW50,ktNW50,ktNE64,ktSE64,ktSW64,ktNW64, radMax;
+    String tipoVelocidad, recordId, aux, data, anio, mes, dia, hora, minuto, retorno="";
+    String[] divisor;
+
+}
+{
+	fecha = <Fecha>{
+		aux = fecha.image.toString();
+		aux = aux.replace(" ","");
+		divisor = aux.split(",",2);
+		anio = divisor[0].substring(0,4);
+		mes = divisor[0].substring(4,6);
+		dia = divisor[0].substring(6,8);
+
+		hora = divisor[1].substring(0,2);
+		minuto = divisor[1].substring(2,4)+",";
+
+		retorno += anio + "," + mes + "," + dia + "," + hora + "," + minuto; 
+	}
+	velocidad = <VelocidadHuracan>{
+		aux = velocidad.image.toString();
+		divisor = aux.split(",",2);
+		divisor[0] = divisor[0].replace(" ","");
+		divisor[1] = divisor[1].replace(" ","");
+		if (divisor[0].isEmpty()) {
+			divisor[0] = "n/a";
+		}
+		recordId = divisor[0];
+		tipoVelocidad = divisor[1];
+
+		retorno += recordId + "," + tipoVelocidad;
+	}
+	lat = <Latitud>{
+		aux = lat.image.toString();
+		aux = aux.replace(" ","");
+		if(aux.contains("S")){
+			aux = aux.replace("S","");
+			aux = "-" + aux;
+		}
+		aux = aux.replace("N","");
+		retorno += aux;
+	}
+	lon = <Longitud>{
+		aux = lon.image.toString();
+		aux = aux.replace(" ","");
+		if(aux.contains("W")){
+			aux = aux.replace("W","");
+			aux = "-" + aux;
+		}
+		aux = aux.replace("E","");
+		retorno += aux;
+	}
+	max = <Data>{
+		aux = max.image.toString();
+		aux = aux.replace(" ","");
+		if(aux.contains("-999")){
+			aux = "null,";
+		}
+		retorno += aux;
+	}
+	min = <Data>{
+		aux = min.image.toString();
+		aux = aux.replace(" ","");
+		if(aux.contains("-999")){
+			aux = "null,";
+		}
+		retorno += aux;
+	}
+	ktNE34 = <Data>{
+		aux = ktNE34.image.toString();
+		aux = aux.replace(" ","");
+		if(aux.contains("-999")){
+			aux = "null,";
+		}
+		retorno += aux;
+	}
+	ktSE34 = <Data>{
+		aux = ktSE34.image.toString();
+		aux = aux.replace(" ","");
+		if(aux.contains("-999")){
+			aux = "null,";
+		}
+		retorno += aux;
+	}
+	ktSW34 = <Data>{
+		aux = ktSW34.image.toString();
+		aux = aux.replace(" ","");
+		if(aux.contains("-999")){
+			aux = "null,";
+		}
+		retorno += aux;
+	}
+	ktNW34 = <Data>{
+		aux = ktNW34.image.toString();
+		aux = aux.replace(" ","");
+		if(aux.contains("-999")){
+			aux = "null,";
+		}
+		retorno += aux;
+	}
+	ktNE50 = <Data>{
+		aux = ktNE50.image.toString();
+		aux = aux.replace(" ","");
+		if(aux.contains("-999")){
+			aux = "null,";
+		}
+		retorno += aux;
+	}
+	ktSE50 = <Data>{
+		aux = ktSE50.image.toString();
+		aux = aux.replace(" ","");
+		if(aux.contains("-999")){
+			aux = "null,";
+		}
+		retorno += aux;
+	}
+	ktSW50 = <Data>{
+		aux = ktSW50.image.toString();
+		aux = aux.replace(" ","");
+		if(aux.contains("-999")){
+			aux = "null,";
+		}
+		retorno += aux;
+	}
+	ktNW50 = <Data>{
+		aux = ktNW50.image.toString();
+		aux = aux.replace(" ","");
+		if(aux.contains("-999")){
+			aux = "null,";
+		}
+		retorno += aux;
+	}
+	ktNE64 = <Data>{
+		aux = ktNE64.image.toString();
+		aux = aux.replace(" ","");
+		if(aux.contains("-999")){
+			aux = "null,";
+		}
+		retorno += aux;
+	}
+	ktSE64 = <Data>{
+		aux = ktSE64.image.toString();
+		aux = aux.replace(" ","");
+		if(aux.contains("-999")){
+			aux = "null,";
+		}
+		retorno += aux;
+	}
+	ktSW64 = <Data>{
+		aux = ktSW64.image.toString();
+		aux = aux.replace(" ","");
+		if(aux.contains("-999")){
+			aux = "null,";
+		}
+		retorno += aux;
+	}
+	ktNW64 = <Data>{
+		aux = ktNW64.image.toString();
+		aux = aux.replace(" ","");
+		if(aux.contains("-999")){
+			aux = "null,";
+		}
+		retorno += aux;
+	}
+	radMax = <Data>{
+		aux = radMax.image.toString();
+		aux = aux.replace(" ","");
+		aux = aux.replace(",","");
+		if(aux.contains("-999")){
+			aux = "null";
+		}
+		retorno += aux;
+		return retorno;
+	}
+}
+
+void parser():
+{
+    String id, metaData;
+}
+{
+    (id = identicador()(metaData = data(){System.out.println(id + metaData);})+)+
+    <EOF>
+}
+
+SKIP: {
+	"\r" | "\t" | "\n" | " "
+}
